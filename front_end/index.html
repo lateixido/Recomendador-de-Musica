@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Recomendador de Discos</title>
+  <style>
+    :root { --bg:#f4f4f4; --card:#fff; --text:#333; --muted:#666; --primary:#007bff; --primary-d:#0056b3; --ok:#e8f5e8; --err:#fde8e8; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 40px; background: var(--bg); color: var(--text); }
+    h1 { margin-bottom: 12px; }
+    form { background: var(--card); padding: 20px; border-radius: 8px; margin-bottom: 20px; display: grid; gap: 10px; max-width: 720px;}
+    label { font-weight: 600; }
+    input, select { width: 100%; max-width: 420px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+    button { width: fit-content; padding: 10px 16px; background: var(--primary); color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background: var(--primary-d); }
+    .stack { display: grid; gap: 12px; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .muted { color: var(--muted); }
+    .loading { color: var(--muted); font-style: italic; }
+    .error { background: var(--err); color: #b40000; padding: 10px; border-radius: 6px; }
+    .okcard { background: var(--ok); padding: 12px; border-radius: 8px; }
+    .card { background: var(--card); padding: 16px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+    .list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+    .song-item { padding: 12px; border: 1px solid #eee; border-radius: 8px; }
+    .pill { display:inline-block; padding: 2px 8px; border-radius: 999px; background:#eef2ff; margin-left:6px; font-size:12px; }
+    small code { background:#f7f7f7; padding:2px 6px; border-radius:4px; }
+  </style>
+</head>
+<body>
+  <h1>🎵 Recomendador de Discos</h1>
+
+  <form id="form">
+    <div class="stack">
+      <div>
+        <label for="song">Canción de referencia</label>
+        <input id="song" placeholder="Ej: Dance" required />
+      </div>
+
+      <div id="artist-container" style="display:none;">
+        <label for="artist">Artista</label>
+        <select id="artist"></select>
+        <div class="muted">Selecciona el artista para desambiguar el título.</div>
+      </div>
+
+      <div class="row">
+        <button id="btn-recomendar" type="submit">Recomendar</button>
+        <button id="btn-limpiar" type="button">Limpiar</button>
+        <span id="hint" class="muted"></span>
+      </div>
+    </div>
+  </form>
+
+  <div id="output" class="stack" style="max-width: 920px;"></div>
+
+  <script>
+    // ==== CONFIG ====
+    const API_BASE = "http://localhost:8080";
+
+    // ==== ELEMENTS ====
+    const form = document.getElementById("form");
+    const songInput = document.getElementById("song");
+    const artistWrap = document.getElementById("artist-container");
+    const artistSelect = document.getElementById("artist");
+    const output = document.getElementById("output");
+    const hint = document.getElementById("hint");
+    const btnLimpiar = document.getElementById("btn-limpiar");
+
+    // ==== HELPERS ====
+    const html = (strings, ...vals) => strings.map((s,i)=>s+(vals[i]??"")).join("");
+    const pct = (v) => (v == null ? "N/A" : (v * 100).toFixed(1) + "%");
+    const fmt = (n, d=2) => Number(n).toFixed(d);
+
+    function showLoading(msg="Buscando recomendaciones...") {
+      output.innerHTML = `<div class="loading">${msg}</div>`;
+    }
+    function showError(msg) {
+      output.innerHTML = `<div class="error">❌ ${msg}</div>`;
+    }
+    function clearOutput() {
+      output.innerHTML = "";
+      hint.textContent = "";
+    }
+    function populateArtists(artists) {
+      artistSelect.innerHTML = "";
+      for (const a of artists) {
+        const opt = document.createElement("option");
+        opt.value = opt.textContent = a;
+        artistSelect.appendChild(opt);
+      }
+      artistWrap.style.display = "block";
+      hint.textContent = "📌 Elige un artista y presiona Recomendar.";
+    }
+    function hideArtistPicker() {
+      artistWrap.style.display = "none";
+      artistSelect.innerHTML = "";
+    }
+
+    function renderOkPayload(data) {
+      const { original_song, recommendations } = data;
+
+      const originCard = html`
+        <div class="okcard">
+          <strong>🎵 Canción original</strong><br/>
+          ${original_song.song} — ${original_song.artist}
+          <div class="muted" style="margin-top:6px;">
+            <small>
+              Danceability: <code>${fmt(original_song.features.Danceability)}</code>
+              Energy: <code>${fmt(original_song.features.Energy)}</code>
+              Positiveness: <code>${fmt(original_song.features.Positiveness)}</code>
+              Loudness: <code>${fmt(original_song.features.Loudness)}</code>
+            </small>
+          </div>
+        </div>
+      `;
+
+      const listItems = (recommendations ?? []).map((rec, i) => html`
+        <li class="song-item">
+          <div><strong>${i+1}. ${rec.song}</strong> — ${rec.artist}
+            <span class="pill">Similitud: ${pct(rec.similarity)}</span>
+          </div>
+          <div class="muted" style="margin-top:4px;">
+            <small>
+              D: <code>${fmt(rec.Danceability)}</code>
+              E: <code>${fmt(rec.Energy)}</code>
+              P: <code>${fmt(rec.Positiveness)}</code>
+              L: <code>${fmt(rec.Loudness)}</code>
+            </small>
+          </div>
+        </li>
+      `).join("");
+
+      const recCard = html`
+        <div class="card">
+          <h3 style="margin:0 0 8px;">Recomendaciones</h3>
+          ${recommendations && recommendations.length
+            ? `<ul class="list">${listItems}</ul>`
+            : `<div class="muted">No se encontraron canciones similares.</div>`
+          }
+        </div>
+      `;
+
+      output.innerHTML = originCard + recCard;
+    }
+
+    // ==== CORE FLOW ====
+    async function fetchRecommendations(song, artist=null) {
+      const url = new URL(`${API_BASE}/recommend/${encodeURIComponent(song)}`);
+      if (artist) url.searchParams.set("artist", artist);
+      const res = await fetch(url.toString(), { headers: { "Accept": "application/json" }});
+      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+      return res.json();
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const song = songInput.value.trim();
+      const chosenArtist = artistWrap.style.display === "block" ? artistSelect.value : null;
+
+      if (!song) {
+        showError("Por favor ingresa el nombre de una canción.");
+        return;
+      }
+
+      showLoading();
+      try {
+        const data = await fetchRecommendations(song, chosenArtist);
+
+        // Handle statuses from the API
+        if (data.status === "not_found") {
+          hideArtistPicker();
+          showError(data.message || "song not found, please write another one:");
+          hint.textContent = "Intenta con otro título.";
+          return;
+        }
+
+        if (data.status === "need_artist") {
+          // Show dropdown with artist options
+          const artists = (data.options && data.options.artists) ? data.options.artists : [];
+          if (artists.length === 0) {
+            showError("Título ambiguo, pero no se recibieron artistas.");
+            return;
+          }
+          populateArtists(artists);
+          output.innerHTML = `<div class="card">🎯 ${data.message || "please select artist"}</div>`;
+          return;
+        }
+
+        if (data.status === "ok") {
+          hideArtistPicker();
+          renderOkPayload(data);
+          return;
+        }
+
+        // Fallbacks (older payloads)
+        if (data.error) {
+          showError(data.error);
+        } else if (data.recommendations) {
+          hideArtistPicker();
+          renderOkPayload({ status:"ok", ...data });
+        } else {
+          showError("Respuesta desconocida del servidor.");
+        }
+      } catch (err) {
+        showError(`Error al conectar con el servidor: ${err.message}`);
+      }
+    });
+
+    btnLimpiar.addEventListener("click", () => {
+      songInput.value = "";
+      hideArtistPicker();
+      clearOutput();
+      songInput.focus();
+    });
+
+    // UX: Enter selects in dropdown too
+    artistSelect.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") form.requestSubmit();
+    });
+  </script>
+</body>
+</html>
