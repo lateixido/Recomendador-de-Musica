@@ -1,4 +1,4 @@
-# 🎵 Recomendador de Discos
+# 🎵 Recomendador de Música
 
 Una aplicación web que recomienda música similar basándose en características musicales.
 

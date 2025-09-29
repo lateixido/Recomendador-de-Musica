@@ -1,10 +1,11 @@
 # Trabajo Práctico Machine Learning - Recomendador Musical
+# Grupo 1 - 29/09/2025
 
 # Integrantes
-Macías, Juliana
-Cortés Cid, Francisco
-Moreno, Nahuel
-Teixido, Leonardo
+- Macías, Juliana
+- Cortés Cid, Francisco
+- Moreno, Nahuel
+- Teixido, Leonardo
 
 # Entrenador
 
