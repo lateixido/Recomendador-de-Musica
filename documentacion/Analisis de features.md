@@ -91,7 +91,7 @@ Comprobar tendencias lineales o agrupamientos.
 
 #### Resultado:
 
-Confirmamos visualmente que:
+Se confirma visualmente que:
 
 - Las canciones con alta Energy tienden a ser más ruidosas.
 - La música muy acústica suele tener menor energía.
