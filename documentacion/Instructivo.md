@@ -1,9 +1,9 @@
-# Instructivo Recomendador Discos TP
+# Instructivo Recomendador de Música
 
 ## 1) Estructura de Carpetas
 
 ```
-Trabajo Practico Grupo 1 - ML - 30 Sept 2025/Modelo
+Recomendador-de-Musica/
 │
 ├─ front_end/
 │   └─ index.html

@@ -196,6 +196,6 @@ Se describe la API de recomendación musical basada en **FastAPI** y un modelo *
 ---
 
 # Tecnologías
-Python, scikit-learn, pandas
-HTML5, CSS3, JavaScript
-Git, GitHub
+- Python, scikit-learn, pandas
+- HTML5, CSS3, JavaScript
+- Git, GitHub
