@@ -42,11 +42,11 @@ Esto generará los artefactos de entrenamiento (`*.joblib`) para no tener que co
 Desde el directorio `frontend/` ejecutar:
 
 ```
-python -m http.server 8000
+python -m http.server [puerto_frontend]
 ```
 
 Correrá en:  
-[http://localhost:8000](http://localhost:8000)
+[http://localhost:[puerto_frontend]](http://localhost:[puerto_frontend])
 
 ---
 
@@ -55,8 +55,8 @@ Correrá en:
 Desde el directorio `model-python` ejecutar:
 
 ```
-python -m uvicorn model_api:app --host 0.0.0.0 --port 8090 --reload
+python -m uvicorn model_api:app --host 0.0.0.0 --port [puerto_backend] --reload
 ```
 
 Correrá en:  
-[http://localhost:8090](http://localhost:8090)
+[http://localhost:[puerto_backend]](http://localhost:[puerto_backend])

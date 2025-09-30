@@ -22,6 +22,7 @@ app.add_middleware(
         "http://127.0.0.1:5500",     # Variante con 127.0.0.1
         "null",                      # Necesario si se abre el frontend con file://
         # Agregar otros puertos si se usan frameworks modernos como Vite/Next (ej: 5173, 3000)
+        # Agregar el [puerto_frontend] necesario
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -38,7 +39,7 @@ NUM_COLS = ["Danceability", "Energy", "Positiveness", "Loudness"]
 ID_COLS = ["song", "artist"]
 
 # Rutas de los archivos
-CSV_PATH = "light_spotify_dataset.csv"                 
+#CSV_PATH = "C:\Datos\Documentos\Uade\Machine Learning\Trabajo Practico Grupo 1 - ML - 30 Sept 2025\Recomendador-de-Musica\dataset\light_spotify_dataset.csv"
 ARTIFACTS_PATH = "recomendador_musical.joblib"   # Ajustado al nombre real del artefacto
 
 # ---------------------------
@@ -51,7 +52,7 @@ def load_data():
     """
     global df, knn_model, scaler
 
-    df_local = pd.read_csv(CSV_PATH)
+    df_local = pd.read_csv(r"C:\Datos\Documentos\Uade\Machine Learning\Trabajo Practico Grupo 1 - ML - 30 Sept 2025\Recomendador-de-Musica\dataset\light_spotify_dataset.csv")
 
     # Validar columnas obligatorias
     missing = [c for c in (ID_COLS + NUM_COLS) if c not in df_local.columns]

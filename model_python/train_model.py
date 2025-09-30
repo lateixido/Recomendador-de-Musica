@@ -12,14 +12,14 @@ from sklearn.neighbors import NearestNeighbors                         # Algorit
 from scipy.sparse import hstack, csr_matrix                            # Manejo de matrices dispersas
 
 # --- 1) Cargar dataset ---
-df = pd.read_csv("~/Developer/Diplomado UADE/Recomendador de discos/model_python/light_spotify_dataset.csv")
+df = pd.read_csv(r"C:\Datos\Documentos\Uade\Machine Learning\Trabajo Practico Grupo 1 - ML - 30 Sept 2025\Recomendador-de-Musica\dataset\light_spotify_dataset.csv")
 
 # Definimos las columnas necesarias
 needed_cols = ["song", "artist", "Danceability", "Energy", "Positiveness", "Loudness"]
 # Verificamos si faltan columnas esperadas
 missing = [c for c in needed_cols if c not in df.columns]
 if missing:
-    raise ValueError(f"Missing expected columns: {missing}")
+    raise ValueError(f"Faltan columnas esperadas: {missing}")
 
 # Eliminamos registros con valores nulos en las columnas clave
 df = df.dropna(subset=needed_cols).reset_index(drop=True)
@@ -53,7 +53,7 @@ def build_feature_vector(row_idx: int):
 def get_track_index(track: str, artist: str | None = None) -> int:
     name_mask = df["song"].str.casefold().str.strip() == track.casefold().strip()
     if not name_mask.any():
-        raise ValueError(f"Track '{track}' not found.")
+        raise ValueError(f"Cancion '{track}' no encontrada.")
 
     # Si se pasa artista, filtramos aún más
     if artist is not None and "artist" in df.columns:
@@ -61,15 +61,15 @@ def get_track_index(track: str, artist: str | None = None) -> int:
         mask = name_mask & artist_mask
         if not mask.any():
             options = df.loc[name_mask, "artist"].dropna().unique().tolist()
-            raise ValueError(f"No match for '{track}' by '{artist}'. "
-                             f"Available artists for that title: {options}")
+            raise ValueError(f"No hay coincidencia para '{track}' de '{artist}'. "
+                             f"Artistas disponibles para este título: {options}")
         idxs = df.index[mask].tolist()
     else:
         idxs = df.index[name_mask].tolist()
         if len(idxs) > 1:  # Título ambiguo
             options = df.loc[idxs, "artist"].dropna().unique().tolist()
-            raise ValueError(f"Ambiguous track title '{track}'. Please specify artist. "
-                             f"Options: {options}")
+            raise ValueError(f"Título de canción ambigüo '{track}'. Por favor, especifique el artista. "
+                             f"Opciones: {options}")
 
     return idxs[0]
 
@@ -104,24 +104,24 @@ artifacts = {
     "feature_matrix_shape": X.shape,
     "track_index": df[needed_cols],
 }
-joblib.dump(artifacts, "music_recommender_numeric_small.joblib")
-print("💾 Saved: music_recommender_numeric_small.joblib")
+joblib.dump(artifacts, "recomendador_musical.joblib")
+print("💾 Guardado: recomendador_musical.joblib")
 
 # --- 8) Prueba rápida (smoke test) ---
 try:
-    user_track = input("Enter a track name: ").strip()
+    user_track = input("Ingresar una canción: ").strip()
     user_artist = None
 
     try:
         recs = recommend_by_track_name(user_track, top_k=10)
-        print(f"\nRecommendations for: {user_track}\n")
+        print(f"\nRecomendaciones para: {user_track}\n")
     except ValueError as amb:
         text = str(amb)
-        if "Please specify artist" in text:
+        if "Por favor, especifique el artista" in text:
             print(text)
-            user_artist = input("Enter the artist to disambiguate: ").strip()
+            user_artist = input("Ingrese el artista para desambigüar: ").strip()
             recs = recommend_by_track_name(user_track, top_k=10, artist=user_artist)
-            print(f"\nRecommendations for: {user_track} | {user_artist}\n")
+            print(f"\nRecomendaciones para: {user_track} | {user_artist}\n")
         else:
             raise
 
@@ -132,7 +132,7 @@ try:
               f"dist={r['distance']:.3f}")
 
 except Exception as e:
-    print("Smoke test skipped:", e)
+    print("Smoke test salteado:", e)
 
 # --- 9) Ejemplo fijo con 'Rick Astley - Dance' ---
 track = "Dance"
